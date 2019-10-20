@@ -110,7 +110,6 @@ class UserProfile(Resource):
             return _BAD_REQUEST
         else:
             user_stats = Stats.query.filter_by(user_id=user.id).first()
-            print(user_stats, 'HERE')
             done = UsersBooks.query.filter_by(user_id=user.id).filter_by(
                 list='DN').count()
             progress = UsersBooks.query.filter_by(user_id=user.id).filter_by(
@@ -126,6 +125,7 @@ class UserProfile(Resource):
                 "done": done,
                 "progress": progress,
                 "future": future,
+                "role": user.role.value,
             }
         return {'user': user_profile, 'status': 200}
 
@@ -177,7 +177,7 @@ class UserProfilePhoto(Resource):
                 image = 'data:image/png;base64,' + base64.b64encode(user.image).decode("utf-8")
             else:
                 image = user.avatar()
-            return image
+            return {'image': image}
 
     def post(self):
         args = self.parser.parse_args()
@@ -199,11 +199,11 @@ class UserProfilePhoto(Resource):
             db.session.commit()
             return {'message': 'Image was uploaded', 'status': 201}
         except IOError:
-            return {'message': 'Could not process given image', 'status': 400}
+            abort(400, 'Could not process given image')
         except SQLAlchemyError as e:
-            return {'message': f'Could not save image due to {e}', 'status': 400}
+            abort(400, f'Could not save image due to {e}')
         except Exception:
-            return {'message': f'An error occurred', 'status': 400}
+            abort(400, f'An error occurred')
 
 
 api.add_resource(UserProfilePhoto, '/profile/image')

@@ -14,6 +14,11 @@ class ListChoices(enum.Enum):
     WR = 'want to read'
 
 
+class RolesChoices(enum.Enum):
+    admin = 'admin'
+    user = 'user'
+
+
 class User(db.Model):
 
     __tablename__ = 'user'
@@ -23,6 +28,7 @@ class User(db.Model):
     username = db.Column(db.String(64), index=True, unique=False)
     password = db.Column(db.String(128))
     image = db.Column(db.LargeBinary)
+    role = db.Column(db.Enum(RolesChoices), server_default=RolesChoices.user.value)
 
     def __init__(self, email, username, **kwargs):
         self.email = email
