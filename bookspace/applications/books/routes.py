@@ -1,4 +1,3 @@
-from werkzeug.utils import redirect
 from bookspace.core.app import db, api
 from flask_restful import Resource, reqparse
 from sqlalchemy import func, desc, and_, or_

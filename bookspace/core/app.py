@@ -2,16 +2,11 @@ import sys
 import logging
 
 from flask_cors import CORS
-from werkzeug.utils import redirect
-
-from flask_restful import Resource, reqparse
-from sqlalchemy import func, desc, and_
-import datetime
 
 from config import Config
-from flask import Flask, Blueprint
+from flask import Flask
 from flask_migrate import Migrate
-from flask_restful import Resource, Api
+from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_mail import Mail
 
@@ -22,7 +17,6 @@ migrate = Migrate()
 app = Flask(__name__)
 app.config[
     'SQLALCHEMY_DATABASE_URI'] = 'postgres://orwmtckfmaantv:9d4f5b41163eb99a0b92f6a983010c41fc3f89806f43087b9381d23481cbdd31@ec2-23-21-129-125.compute-1.amazonaws.com:5432/d9c2d2fn6ej2d2'
-# app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 app.config.from_object(Config)
 CORS(app)
@@ -39,12 +33,7 @@ from bookspace.applications.books import bp as books_bp
 
 app.register_blueprint(books_bp)
 
-# app = create_app()
 app.app_context().push()
-# db = SQLAlchemy(app)
-# migrate = Migrate(app)
-# api = Api(app)
-
 db.create_all(app=app)
 
 session = db.session()
@@ -62,7 +51,6 @@ session = db.session()
 #         'author': author, 'genre': genre, 'pages': pages, 'rate': 0})
 #     session.commit()
 #     return 'ok'
-
 
 
 app.logger.addHandler(logging.StreamHandler(sys.stdout))

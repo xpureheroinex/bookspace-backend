@@ -126,7 +126,6 @@ class UserProfile(Resource):
                 "done": done,
                 "progress": progress,
                 "future": future,
-                "avatar": user.avatar()
             }
         return {'user': user_profile, 'status': 200}
 

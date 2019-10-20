@@ -7,10 +7,6 @@ from itsdangerous import (TimedJSONWebSignatureSerializer
                           as Serializer, BadSignature, SignatureExpired)
 from hashlib import md5
 
-# from flask_login import UserMixin
-
-# app = create_app()
-
 
 class ListChoices(enum.Enum):
     DN = 'done'
