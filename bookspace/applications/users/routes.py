@@ -1,13 +1,10 @@
 import base64
 import random
 import string
-from io import BytesIO
 
-from PIL import Image
 from flask import render_template, make_response, send_file, abort
 from flask_mail import Message
 from sqlalchemy.exc import SQLAlchemyError
-from werkzeug.utils import redirect
 
 from bookspace.core.app import db, api, mail
 from flask_restful import Resource, reqparse
@@ -93,25 +90,6 @@ class Register(Resource):
 api.add_resource(Register, '/register')
 
 
-# class Test(Resource):
-#
-#     def __init__(self):
-#         self.parser = reqparse.RequestParser()
-#         self.parser.add_argument('Authorization', location='headers')
-#
-#     def post(self):
-#         args = self.parser.parse_args()
-#         token = args['Authorization'].split(' ')[1]
-#         print(token)
-#
-#         user = User.verify_auth_token(token)
-#
-#         return {'token': token, 'user': user['username']}
-#
-#
-# api.add_resource(Test, '/test')
-
-
 class UserProfile(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
@@ -180,7 +158,7 @@ api.add_resource(UserProfile, '/profile')
 class UserProfilePhoto(Resource):
     def __init__(self):
         self.parser = reqparse.RequestParser()
-        self.parser.add_argument('photo')
+        self.parser.add_argument('image')
         self.parser.add_argument('Authorization', location='headers')
 
     def get(self):
@@ -197,14 +175,14 @@ class UserProfilePhoto(Resource):
             return _BAD_REQUEST
         else:
             if user.image:
-                image = 'data:image/png;base64,' + base64.b64encode(user.image)
+                image = 'data:image/png;base64,' + base64.b64encode(user.image).decode("utf-8")
             else:
                 image = user.avatar()
             return image
 
     def post(self):
         args = self.parser.parse_args()
-        photo = args.get('photo')
+        photo = args.get('image')
         token = args.get('Authorization').split(' ')[1]
 
         if not token or not User.verify_auth_token(token):
@@ -217,22 +195,19 @@ class UserProfilePhoto(Resource):
         try:
             b64photo = photo.split('base64,')[1]
             photo_data = base64.b64decode(b64photo)
-            image = Image.open(BytesIO(photo_data))
-            user.image = image
+            user.image = photo_data
             db.session.add(user)
             db.session.commit()
             return {'message': 'Image was uploaded', 'status': 201}
         except IOError:
             return {'message': 'Could not process given image', 'status': 400}
         except SQLAlchemyError as e:
-            return {'message': f'Could not save image due to {e}', 'status': 500}
+            return {'message': f'Could not save image due to {e}', 'status': 400}
         except Exception:
-            return {'message': f'An error occured', 'status': 500}
+            return {'message': f'An error occurred', 'status': 400}
 
 
 api.add_resource(UserProfilePhoto, '/profile/image')
-
-
 
 
 class Statistics(Resource):
