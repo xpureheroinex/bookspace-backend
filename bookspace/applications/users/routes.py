@@ -1,7 +1,9 @@
 import base64
+import io
 import random
 import string
 
+from PIL import Image
 from flask import render_template, make_response, send_file, abort
 from flask_mail import Message
 from sqlalchemy.exc import SQLAlchemyError
@@ -75,6 +77,11 @@ class Register(Resource):
                 username=username,
             )
             user.set_password(password)
+            with Image.open('bookspace/static/images/avatar.png') as img:
+                output = io.BytesIO()
+                img.save(output, format='png')
+                image_data = output.getvalue()
+                user.image = image_data
             session.add(user)
             session.commit()
             status = Stats(
@@ -198,11 +205,11 @@ class UserProfilePhoto(Resource):
             db.session.add(user)
             db.session.commit()
             return {'message': 'Image was uploaded', 'status': 201}
-        except IOError:
+        except IOError as e:
             abort(400, 'Could not process given image')
         except SQLAlchemyError as e:
             abort(400, f'Could not save image due to {e}')
-        except Exception:
+        except Exception as e:
             abort(400, f'An error occurred')
 
 
