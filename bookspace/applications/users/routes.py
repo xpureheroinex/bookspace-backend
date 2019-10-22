@@ -667,6 +667,11 @@ class GoogleRegister(Resource):
             email=email,
             username=username)
         user.set_password(password)
+        with Image.open('bookspace/static/images/avatar.png') as img:
+            output = io.BytesIO()
+            img.save(output, format='png')
+            image_data = output.getvalue()
+            user.image = image_data
         session.add(user)
         session.commit()
         status = Stats(
