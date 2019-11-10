@@ -29,6 +29,7 @@ class User(db.Model):
     password = db.Column(db.String(128))
     image = db.Column(db.LargeBinary)
     role = db.Column(db.Enum(RolesChoices), server_default=RolesChoices.user.value)
+    quote = db.Column(db.String(128), nullable=True)
 
     def __init__(self, email, username, **kwargs):
         self.email = email

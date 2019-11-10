@@ -39,12 +39,13 @@ class Books(Resource):
                 limit(5).all()
             recs = []
             user_book = models.UsersBooks.query.filter_by(user_id=user.id).filter_by(books_id=book.id).first()
-            if user_book is None:
-                list = None
-            elif user_book.list is None:
-                list = None
-            else:
+
+            list, user_rate = None, 0
+            if user_book and user_book.list:
                 list = user_book.list.name
+            if user_book and user_book.rate:
+                user_rate = user_book.rate
+
             for rec in similar_books:
                 info = {'id': rec.id,
                         'title': rec.title,
@@ -60,6 +61,7 @@ class Books(Resource):
                       'pages': book.pages,
                       'rate': book.rate,
                       'list': list,
+                      'user_rate': user_rate,
                       'recs': recs}
             return {'book': result, 'status': 200}
 

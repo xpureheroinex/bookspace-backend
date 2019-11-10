@@ -43,10 +43,11 @@ class Login(Resource):
                 if check_login is None:
                     token = user.generate_auth_token(expiration=10000)
                     tkn = str(token)
-                    new = Tokens(token=tkn[2:len(tkn) - 1], user_id=user.id)
+                    tkn = tkn[2:len(tkn) - 1]
+                    new = Tokens(token=tkn, user_id=user.id)
                     session.add(new)
                     session.commit()
-                    return _GOOD_REQUEST, {'Bearer': token}
+                    return {'message': 'ok', 'status': 200, 'Bearer': tkn}, {'Bearer': token}
                 else:
                     return {'message': 'User already logged in', 'status': '400'}
             return _BAD_REQUEST
@@ -102,6 +103,7 @@ class UserProfile(Resource):
         self.parser = reqparse.RequestParser()
         self.parser.add_argument('password')
         self.parser.add_argument('username')
+        self.parser.add_argument('quote')
         self.parser.add_argument('Authorization', location='headers')
 
     def get(self):
@@ -133,13 +135,16 @@ class UserProfile(Resource):
                 "progress": progress,
                 "future": future,
                 "role": user.role.value,
+                "quote": user.quote
             }
         return {'user': user_profile, 'status': 200}
 
     def put(self):
         args = self.parser.parse_args()
-        username = args['username']
-        password = args['password']
+        username = args.get('username')
+        password = args.get('password')
+        quote = args.get('quote')
+
         if args['Authorization'] is None:
             return {'message': 'Unauthorized', 'status': 401}
         token = args['Authorization'].split(' ')[1]
@@ -150,9 +155,11 @@ class UserProfile(Resource):
         if user is None:
             return _BAD_REQUEST
         else:
-            if username is not None:
+            if username:
                 user.username = username
-            if password is not None:
+            if quote:
+                user.quote = quote
+            if password:
                 user.set_password(password)
             session.commit()
             return {'message': 'successfully updated', 'status': 200}
@@ -346,7 +353,7 @@ class LogOut(Resource):
         if new is not None:
             session.delete(new)
             session.commit()
-            return {'message': 'User loged out', 'status': 200}
+            return {'message': 'User logged out', 'status': 200}
         else:
             return _BAD_REQUEST
 
