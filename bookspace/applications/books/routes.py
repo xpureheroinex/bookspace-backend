@@ -1,3 +1,5 @@
+from sqlalchemy.exc import SQLAlchemyError
+
 from bookspace.core.app import db, api
 from flask_restful import Resource, reqparse
 from sqlalchemy import func, desc, and_, or_
@@ -96,7 +98,10 @@ class Books(Resource):
                 book.rate = average_rate
                 session.add(book)
             session.add(user_book)
-            session.commit()
+            try:
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
             return _GOOD_REQUEST
         else:
             return _BAD_REQUEST
@@ -126,7 +131,11 @@ class Books(Resource):
             else:
                 user_book.list = status
                 session.add(user_book)
-            session.commit()
+            try:
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
+
             return _GOOD_REQUEST
         else:
             return _BAD_REQUEST
@@ -144,7 +153,10 @@ class Books(Resource):
             user_id=user.id).filter_by(books_id=book_id).first()
         if user_book is not None:
             session.delete(user_book)
-            session.commit()
+            try:
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
             return _GOOD_REQUEST
         else:
             return _BAD_REQUEST
@@ -200,7 +212,10 @@ class Notes(Resource):
                             text=text,
                             title=title)
         session.add(note)
-        session.commit()
+        try:
+            session.commit()
+        except SQLAlchemyError:
+            session.rollback()
         return {'message': 'Successfully created', 'status': 201}
 
 
@@ -234,7 +249,10 @@ class OneNote(Resource):
             if title is not None:
                 new_note.title = title
             session.add(new_note)
-            session.commit()
+            try:
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
             return _GOOD_REQUEST
         else:
             return {'message': 'Forbidden', 'status': 403}
@@ -255,7 +273,10 @@ class OneNote(Resource):
             return _BAD_REQUEST
         elif note.user_id == user.id:
             session.delete(note)
-            session.commit()
+            try:
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
             return _GOOD_REQUEST
         else:
             return {'message': 'Forbidden', 'status': 403}

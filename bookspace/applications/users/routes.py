@@ -46,7 +46,11 @@ class Login(Resource):
                     tkn = tkn[2:len(tkn) - 1]
                     new = Tokens(token=tkn, user_id=user.id)
                     session.add(new)
-                    session.commit()
+                    try:
+                        session.commit()
+                    except SQLAlchemyError:
+                        session.rollback()
+
                     return {'message': 'ok', 'status': 200, 'Bearer': tkn}, {'Bearer': token}
                 else:
                     return {'message': 'User already logged in', 'status': '400'}
@@ -84,12 +88,18 @@ class Register(Resource):
                 image_data = output.getvalue()
                 user.image = image_data
             session.add(user)
-            session.commit()
+            try:
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
             status = Stats(
                 user_id=user.id
             )
             session.add(status)
-            session.commit()
+            try:
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
             return {'message': 'Successfully created', 'status': 201}
         else:
             return _BAD_REQUEST
@@ -161,7 +171,10 @@ class UserProfile(Resource):
                 user.quote = quote
             if password:
                 user.set_password(password)
-            session.commit()
+            try:
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
             return {'message': 'successfully updated', 'status': 200}
 
 
@@ -210,7 +223,10 @@ class UserProfilePhoto(Resource):
             photo_data = base64.b64decode(b64photo)
             user.image = photo_data
             db.session.add(user)
-            db.session.commit()
+            try:
+                db.session.commit()
+            except SQLAlchemyError:
+                db.session.rollback()
             return {'message': 'Image was uploaded', 'status': 201}
         except IOError as e:
             abort(400, 'Could not process given image')
@@ -401,13 +417,16 @@ class Statistics(Resource):
             return _BAD_REQUEST
         else:
             update_status = Stats.query.filter_by(user_id=user.id).first()
-            if week is not None:
+            if week and week.isdigit():
                 update_status.week = week
-            if month is not None:
+            if month and month.isdigit():
                 update_status.month = month
-            if year is not None:
+            if year and year.isdigit():
                 update_status.year = year
-            session.commit()
+            try:
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
             return _GOOD_REQUEST
 
 
@@ -428,7 +447,11 @@ class LogOut(Resource):
         new = Tokens.query.filter_by(token=token).first()
         if new is not None:
             session.delete(new)
-            session.commit()
+            try:
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
+
             return {'message': 'User logged out', 'status': 200}
         else:
             return _BAD_REQUEST
@@ -608,7 +631,10 @@ class AddReviews(Resource):
                 text=text
             )
             session.add(review)
-            session.commit()
+            try:
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
             return {'message': 'Successfully created', 'status': 201}
         else:
             return _BAD_REQUEST
@@ -720,7 +746,10 @@ class GoogleLogin(Resource):
                 tkn = str(token)
                 new = Tokens(token=tkn[2:len(tkn) - 1], user_id=user.id)
                 session.add(new)
-                session.commit()
+                try:
+                    session.commit()
+                except SQLAlchemyError:
+                    session.rollback()
                 return _GOOD_REQUEST, {'Bearer': token}
             else:
                 return {'message': 'User already logged in',
@@ -756,12 +785,18 @@ class GoogleRegister(Resource):
             image_data = output.getvalue()
             user.image = image_data
         session.add(user)
-        session.commit()
+        try:
+            session.commit()
+        except SQLAlchemyError:
+            session.rollback()
         status = Stats(
             user_id=user.id)
         session.add(user)
         session.add(status)
-        session.commit()
+        try:
+            session.commit()
+        except SQLAlchemyError:
+            session.rollback()
 
         msg = Message(f"BookSpace register",
                       recipients=[email])
@@ -798,7 +833,10 @@ class RestorePass(Resource):
                 f"To login, use this password (you have to change it later): {password}"
             mail.send(msg)
             session.add(user)
-            session.commit()
+            try:
+                session.commit()
+            except SQLAlchemyError:
+                session.rollback()
             return _GOOD_REQUEST
         else:
             return _BAD_REQUEST
