@@ -174,10 +174,18 @@ class Notes(Resource):
         self.parser.add_argument('text')
 
     def get(self, book_id):
+        args = self.parser.parse_args()
+        if args['Authorization'] is None:
+            return {'message': 'Unauthorized', 'status': 401}
+        token = args['Authorization'].split(' ')[1]
+        user_id = models.User.verify_auth_token(token)['user_id']
+        user = models.User.query.get(user_id)
+        if user is None:
+            return _BAD_REQUEST
         book = models.Books.query.filter_by(id=book_id).first()
         if book is None:
             return _BAD_REQUEST
-        notes = models.Notes.query.filter_by(books_id=book_id).all()
+        notes = models.Notes.query.filter_by(books_id=book_id, user_id=user.id).all()
 
         response = []
         for note in notes:
